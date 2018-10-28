@@ -15,6 +15,8 @@ namespace xEditorGUIGen
     {
         private static string[] styleNames = new[] { "boldFont", "boldLabel", "centeredGreyMiniLabel", "colorField", "foldout", "foldoutPreDrop", "helpBox", "inspectorDefaultMargins", "inspectorFullWidthMargins", "label", "largeLabel", "layerMaskField", "miniBoldFont", "miniBoldLabel", "miniButton", "miniButtonLeft", "miniButtonMid", "miniButtonRight", "miniFont", "miniLabel", "miniTextField", "numberField", "objectField", "objectFieldMiniThumb", "objectFieldThumb", "popup", "radioButton", "standardFont", "textArea", "textField", "toggle", "toggleGroup", "toolbar", "toolbarButton", "toolbarDropDown", "toolbarPopup", "toolbarTextField", "whiteBoldLabel", "whiteLabel", "whiteLargeLabel", "whiteMiniLabel", "wordWrappedLabel", "wordWrappedMiniLabel" };
 
+        private static string[] methodExceptions = new[] { "DrawTextureTransparent" };
+
         private static void Main(string[] args)
         {
             //Console.WriteLine(Resources.EditorGUI);
@@ -119,26 +121,24 @@ namespace xEditorGUIGen
                 try
                 {
                     string Params = ItemMatch.Groups["Params"].Value;
-                    // int equalsPos = Params.IndexOf('=');
 
-                    // ReplaceByPosition(" = ", equalsPos, Params.IndexOf(',', equalsPos + 1) - equalsPos - 1)
+                    bool hasOptionalParams = Params.Contains('='),
+                         hasAttributedParams = Params.Contains(")]"),
+                         hasOptionalAttributedParams = hasOptionalParams && hasAttributedParams;
 
-                    // string _Params = (string)Params.Clone();
+                    if (hasOptionalAttributedParams)
+                        sb.AppendLineIndented(@"throw new Exception(""Methods with optional attributed params aren't implemented yet!"");", 3);
 
-                    //bool hasOptionalParams = Params.Contains('='),
-                    //     hasOptionalAttributeParams = hasOptionalParams && Params.Contains(")]");
+                    bool isSupported = true;
 
-                    bool hasAttributeParams = Params.Contains(")]");
-
-                    if (hasAttributeParams)
-                    {
-                        sb.AppendLineIndented(@"throw new Exception(""Methods with attributed params aren't implemented yet!"");", 3);
-
-                        sb.AppendLineIndented("}", 2);
-                        sb.AppendLine();
-
-                        continue;
-                    }
+                    if (hasAttributedParams)
+                        foreach (string exceptionName in methodExceptions)
+                            if (methodWithType[1].Contains(exceptionName))
+                            {
+                                if (!hasOptionalAttributedParams)
+                                    sb.AppendLineIndented(@"throw new Exception(""This method isn't supported!"");", 3);
+                                isSupported = false;
+                            }
 
                     if (Params.Contains('='))
                         Params = new Regex(" =.+?,").Replace(Params, ",");
@@ -155,14 +155,14 @@ namespace xEditorGUIGen
 
                     IEnumerable<Param> parsObjects = parsPreObj.Select(x => x.Length == 2 ? new Param(x.First(), x[1]) : new Param(x[0], x[1], x[2]));
 
+                    bool isEditorMethod = false;
+
                     if (parsObjects.Any(x => x.type == "Editor"))
                     {
-                        sb.AppendLineIndented(@"throw new Exception(""Methods with Editor type in it's parameters aren't implemented yet!"");", 3);
+                        if (isSupported && !hasOptionalAttributedParams)
+                            sb.AppendLineIndented(@"throw new Exception(""Methods with Editor type in it's parameters aren't implemented yet!"");", 3);
 
-                        sb.AppendLineIndented("}", 2);
-                        sb.AppendLine();
-
-                        continue;
+                        isEditorMethod = true;
                     }
 
                     bool hasNoPosition = !parsObjects.Any(x => x.type == "Rect" && x.name == "position");
@@ -184,23 +184,30 @@ namespace xEditorGUIGen
                     if (hasNoContent)
                         contentParam = "GUIContent.none";
 
-                    if (hasNoPosition)
-                        sb.AppendLineIndented(@"throw new Exception(""No implementation Layout yet!"");", 3);
-                    else
+                    if (hasNoPosition && isSupported && !isEditorMethod && !hasOptionalAttributedParams)
                     {
-                        if (addBody)
-                            sb.AppendLineIndented($@"if(!stylesDict.ContainsKey(""{methodWithType[1]}""))", 3);
-
-                        if (hasStyle)
-                            sb.AppendLineIndented($@"stylesDict.Add(""{methodWithType[1]}"", new StyleWrapper(style, {contentParam}));", 4);
-                        else if (styleExists)
-                            sb.AppendLineIndented($@"stylesDict.Add(""{methodWithType[1]}"", new StyleWrapper(EditorStyles.{styleName}, {contentParam}));", 4);
-
-                        if (addBody)
-                            sb.AppendLine();
-
-                        sb.AppendLineIndented($"{(methodWithType[0] == "void" ? "" : "return ")}EditorGUI.{methodWithType[1]}({pars});", 3);
+                        if (isSupported)
+                            sb.AppendLineIndented(@"throw new Exception(""No implementation Layout yet!"");", 3);
                     }
+
+                    if (!isSupported || isEditorMethod || hasOptionalAttributedParams || hasNoPosition)
+                        sb.AppendLineIndented("/*", 3);
+
+                    if (addBody)
+                        sb.AppendLineIndented($@"if(!stylesDict.ContainsKey(""{methodWithType[1]}""))", 3);
+
+                    if (hasStyle)
+                        sb.AppendLineIndented($@"stylesDict.Add(""{methodWithType[1]}"", new StyleWrapper(style, {contentParam}));", 4);
+                    else if (styleExists)
+                        sb.AppendLineIndented($@"stylesDict.Add(""{methodWithType[1]}"", new StyleWrapper(EditorStyles.{styleName}, {contentParam}));", 4);
+
+                    if (addBody)
+                        sb.AppendLine();
+
+                    sb.AppendLineIndented($"{(methodWithType[0] == "void" ? "" : "return ")}EditorGUI.{methodWithType[1]}({pars});", 3);
+
+                    if (!isSupported || isEditorMethod || hasOptionalAttributedParams || hasNoPosition)
+                        sb.AppendLineIndented("*/", 3);
                 }
                 catch (Exception ex)
                 {
