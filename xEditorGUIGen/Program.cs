@@ -64,7 +64,7 @@ namespace xEditorGUIGen
             sb.AppendLine();
 
             sb.AppendLineIndented(@"
-                                    public class StyleWrapper
+                                    public sealed class StyleWrapper
                                     {
                                         public Dictionary<GUIStyle, GUIContents> listWrapper = new Dictionary<GUIStyle, GUIContents>();
 
@@ -79,7 +79,7 @@ namespace xEditorGUIGen
                                         }
                                     }
 
-                                    public class GUIContents
+                                    public sealed class GUIContents
                                     {
                                         private static Dictionary<string, GUIContents> dictionary = new Dictionary<string, GUIContents>();
 
@@ -109,7 +109,7 @@ namespace xEditorGUIGen
             sb.AppendLine();
 
             sb.AppendLineIndented("// I suggest you not to implement anything here due to generation. Use partial approach.", 1);
-            sb.AppendLineIndented("public partial class xEditorGUI", 1);
+            sb.AppendLineIndented("public sealed partial class xEditorGUI", 1);
             sb.AppendLineIndented("{", 1);
 
             sb.AppendLineIndented("private Dictionary<string, StyleWrapper> stylesDict = new Dictionary<string, StyleWrapper>();", 2);
