@@ -167,7 +167,6 @@ namespace xEditorGUIGen
 
                     bool hasNoPosition = !parsObjects.Any(x => x.type == "Rect" && x.name == "position");
 
-                    // var dynamicValues = parsObjects.AsDynamic();
                     IEnumerable<string> parsNames = parsObjects.Select(x => x.name);
 
                     string contentParam = parsNames.GetParam();
@@ -175,9 +174,6 @@ namespace xEditorGUIGen
                     bool hasStyle = parsNames.Contains("style");
 
                     string pars = parsObjects.GetParams();
-
-                    //if (methodDef.Contains("Enum selected") && methodDef.Contains(">"))
-                    //    Console.WriteLine(pars);
 
                     string styleName = methodWithType[1].FirstCharToLower();
 
@@ -195,8 +191,6 @@ namespace xEditorGUIGen
                         if (addBody)
                             sb.AppendLineIndented($@"if(!stylesDict.ContainsKey(""{methodWithType[1]}""))", 3);
 
-                        // string contentParam = hasText ? "text" : (parsNames.Contains("label") ? "label" : "content");
-
                         if (hasStyle)
                             sb.AppendLineIndented($@"stylesDict.Add(""{methodWithType[1]}"", new StyleWrapper(style, {contentParam}));", 4);
                         else if (styleExists)
@@ -210,11 +204,6 @@ namespace xEditorGUIGen
                 }
                 catch (Exception ex)
                 {
-                    //// Get stack trace for the exception with source file information
-                    //var st = new StackTrace(ex, true);
-                    //// Get the top stack frame
-                    //var frame = st.GetFrame(0);
-
                     sb.AppendLineIndented($"// Couldn't add this line! (Exception: {ex.GetType().FullName} -- At line: {ex.LineNumber()})", 3);
 
                     if (methodWithType[0] != "void")
@@ -246,8 +235,6 @@ namespace xEditorGUIGen
 
             Console.WriteLine($"{codeGen.Length} characters copied to clipboard.");
 
-            // Console.WriteLine(sb.ToString());
-
             Console.Read();
         }
     }
@@ -257,7 +244,6 @@ namespace xEditorGUIGen
         public static string ReplaceIf(this string str, string find, string replacement, string match)
         {
             return str.Contains(match) ? str.Replace(find, replacement) : str;
-            // return str.Contains(match) ? str.ReplaceByPosition(replacement, str.IndexOf(find), find.Length - 1) : str;
         }
 
         public static string ReplaceIf(this string str, string find, string replacement, char match)
@@ -273,8 +259,6 @@ namespace xEditorGUIGen
             }
             else
                 return str;
-
-            // return str.Contains(match) ? str.Replace(find, replacement) : str;
         }
 
         public static string FirstCharToLower(this string input)
@@ -300,12 +284,6 @@ namespace xEditorGUIGen
             thread.Join();
         }
 
-        //public static IEnumerable<dynamic> AsDynamic<T>(this IEnumerable<T> ts)
-        //{
-        //    foreach (var t in ts)
-        //        yield return (dynamic)t;
-        //}
-
         public static string GetParam(this IEnumerable<string> pars)
         {
             if (pars.Contains("label"))
@@ -322,28 +300,11 @@ namespace xEditorGUIGen
 
         public static string GetParams(this IEnumerable<Param> values)
         {
-            // Param[] param = values.ToArray();
             return string.Join(", ", values.Select(x => GetParam(x)));
         }
 
         private static string GetParam(Param par)
         {
-            //string ret = "";
-
-            //bool label = par.name == "label",
-            //        content = par.name == "content",
-            //        message = par.name == "message",
-            //        text = par.name == "text";
-
-            //if (label)
-            //    ret = "label";
-            //else if (content)
-            //    ret = "content";
-            //else if (message)
-            //    ret = "message";
-            //else if (text)
-            //    ret = "text";
-
             return GetModifier(par.modifier) + par.name;
         }
 
