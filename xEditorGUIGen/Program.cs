@@ -230,6 +230,7 @@ namespace xEditorGUIGen
 
                         if (!dontNeedPosition)
                         {
+                            sb.AppendLineIndented("Rect lastPosition = _position;", 3);
                             sb.AppendLineIndented($"UpdatePosition({currentStyle}, {contentParam});", 3);
                             sb.AppendLine();
                         }
@@ -291,7 +292,7 @@ namespace xEditorGUIGen
                                         UpdatePosition(style, new GUIContent(label));
                                     }
 
-                                    private void UpdatePosition(GUIStyle style, GUIContent content)
+                                    /*private void UpdatePosition(GUIStyle style, GUIContent content)
                                     {
                                         Vector2 vector = style.CalcSize(content);
 
@@ -303,7 +304,7 @@ namespace xEditorGUIGen
                                         _position.xMin = vector.y;
                                         _position.width = width;
                                         _position.height = height;
-                                    }", 2);
+                                    }*/", 2);
 
             sb.AppendLineIndented("}", 1);
 
@@ -482,7 +483,7 @@ namespace xEditorGUIGen
             unsupportedParams = string.Join(", ", uPars);
 
             if (isLayout)
-                return "_position, " + pars.Replace(", options", "");
+                return "lastPosition, " + pars.Replace(", options", "");
             else
                 return pars;
         }
